@@ -37,8 +37,7 @@ RUN pip install --no-cache-dir -r requirements.txt \
     --root-user-action=ignore
 
 # ── Playwright: install chromium into known path ──────────────────
-RUN playwright install chromium \
-    && mv /root/.cache/ms-playwright /app/ms-playwright
+RUN playwright install chromium
 
 # ── Non-root user ─────────────────────────────────────────────────
 RUN useradd -m -u 1001 -s /bin/bash xscout \
