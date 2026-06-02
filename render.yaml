@@ -1,29 +1,22 @@
 # ═══════════════════════════════════════════════════════════════════
-# XSS Scout — Render.com Deployment
-# Deploy: render.com → New → Blueprint → connect this repo
+# XSS Scout — Render.com Blueprint
+# render.com → New → Blueprint → connect repo → Apply
 # ═══════════════════════════════════════════════════════════════════
 
 services:
-
-  # ── Web service ──────────────────────────────────────────────────
   - type: web
     name: xss-scout
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-
-    plan: standard          # standard has enough RAM for Playwright
-
-    # Auto-deploy on push to main
+    plan: standard
     branch: main
     autoDeploy: true
-
-    # Health check path
     healthCheckPath: /health
 
     envVars:
       - key: PORT
-        value: "10000"         # Render assigns PORT automatically; we echo it
+        value: "10000"
       - key: HOST
         value: "0.0.0.0"
       - key: WORKERS
@@ -36,22 +29,8 @@ services:
         value: "/app/evidence"
       - key: SCAN_REPORTS_DIR
         value: "/app/reports"
-      # Optional: set DATABASE_URL to use the Render Postgres add-on
-      - key: DATABASE_URL
-        fromDatabase:
-          name: xss-scout-db
-          property: connectionString
-        required: false
 
     disk:
       name: xss-scout-data
       mountPath: /app/data
       sizeGB: 5
-
-  # ── Optional: managed Postgres ───────────────────────────────────
-  # Uncomment to provision a Render Postgres instance
-  # - type: pserv
-  #   name: xss-scout-db
-  #   databaseName: xscanner
-  #   databaseUser: xscanner
-  #   plan: free
