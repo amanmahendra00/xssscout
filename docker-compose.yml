@@ -1,0 +1,97 @@
+version: "3.9"
+
+# ═══════════════════════════════════════════════════════════════════
+# XSS Scout — Docker Compose
+# Usage:
+#   docker compose up                    # SQLite only (default)
+#   docker compose --profile full up     # + PostgreSQL + Redis
+# ═══════════════════════════════════════════════════════════════════
+
+services:
+
+  # ── App ─────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final
+    image: xss-scout:latest
+    container_name: xss-scout-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      PORT: "8000"
+      HOST: "0.0.0.0"
+      WORKERS: "1"
+      LOG_LEVEL: "info"
+      SCAN_WORKERS: "${SCAN_WORKERS:-20}"
+      SCAN_EVIDENCE_DIR: "/app/evidence"
+      SCAN_REPORTS_DIR: "/app/reports"
+      # Set DATABASE_URL to use PostgreSQL instead of SQLite
+      DATABASE_URL: "${DATABASE_URL:-}"
+      REDIS_URL: "${REDIS_URL:-}"
+    volumes:
+      - evidence:/app/evidence
+      - reports:/app/reports
+      - uploads:/app/uploads
+      - sqlite_data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+      redis:
+        condition: service_healthy
+        required: false
+
+  # ── PostgreSQL (optional — profile: full) ────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: xss-scout-postgres
+    profiles: ["full"]
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: xscanner
+      POSTGRES_USER: xscanner
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-xscanner_secret}"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xscanner -d xscanner"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  # ── Redis (optional — profile: full) ────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: xss-scout-redis
+    profiles: ["full"]
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "6379:6379"
+
+volumes:
+  evidence:
+  reports:
+  uploads:
+  sqlite_data:
+  pg_data:
+  redis_data:

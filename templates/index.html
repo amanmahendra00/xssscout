@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>XSS Scout — Intelligence Framework</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="/static/css/app.css"/>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ── SIDEBAR ─────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">X</div>
+      <div class="brand-text">
+        <div class="brand-name">XSS Scout</div>
+        <div class="brand-ver">v2.1.0 · python 3.12</div>
+      </div>
+    </div>
+
+    <nav class="nav-wrap">
+      <div class="nav-group-label">Setup</div>
+      <div class="nav-item active" data-panel="config">
+        <span class="ni-icon"><i class="fa fa-sliders"></i></span>
+        <span class="ni-label">Configuration</span>
+      </div>
+      <div class="nav-item" data-panel="urls">
+        <span class="ni-icon"><i class="fa fa-list-ul"></i></span>
+        <span class="ni-label">URL Processing</span>
+      </div>
+      <div class="nav-item" data-panel="crawl">
+        <span class="ni-icon"><i class="fa fa-spider"></i></span>
+        <span class="ni-label">Crawler Engine</span>
+      </div>
+      <div class="nav-item" data-panel="payload">
+        <span class="ni-icon"><i class="fa fa-bolt"></i></span>
+        <span class="ni-label">Payload Engine</span>
+      </div>
+
+      <div class="nav-group-label">Analysis</div>
+      <div class="nav-item" data-panel="reflect">
+        <span class="ni-icon"><i class="fa fa-magnifying-glass"></i></span>
+        <span class="ni-label">Reflection &amp; Context</span>
+        <span class="ni-badge nb-red" id="badge-reflect">0</span>
+      </div>
+      <div class="nav-item" data-panel="dom">
+        <span class="ni-icon"><i class="fa fa-code"></i></span>
+        <span class="ni-label">DOM / AST / Taint</span>
+        <span class="ni-badge nb-red" id="badge-dom">0</span>
+      </div>
+      <div class="nav-item" data-panel="ctxverify">
+        <span class="ni-icon"><i class="fa fa-shield-halved"></i></span>
+        <span class="ni-label">Context Verify</span>
+      </div>
+      <div class="nav-item" data-panel="csp">
+        <span class="ni-icon"><i class="fa fa-lock"></i></span>
+        <span class="ni-label">CSP Analysis</span>
+        <span class="ni-badge nb-amber" id="badge-csp">0</span>
+      </div>
+      <div class="nav-item" data-panel="waf">
+        <span class="ni-icon"><i class="fa fa-wall-brick"></i></span>
+        <span class="ni-label">WAF Detection</span>
+        <span class="ni-badge nb-amber" id="badge-waf">0</span>
+      </div>
+      <div class="nav-item" data-panel="hist">
+        <span class="ni-icon"><i class="fa fa-clock-rotate-left"></i></span>
+        <span class="ni-label">Historical</span>
+        <span class="ni-badge nb-purple" id="badge-hist">0</span>
+      </div>
+      <div class="nav-item" data-panel="fp">
+        <span class="ni-icon"><i class="fa fa-filter"></i></span>
+        <span class="ni-label">FP Elimination</span>
+      </div>
+
+      <div class="nav-group-label">Results</div>
+      <div class="nav-item" data-panel="findings">
+        <span class="ni-icon"><i class="fa fa-triangle-exclamation"></i></span>
+        <span class="ni-label">Findings</span>
+        <span class="ni-badge nb-red" id="badge-findings">0</span>
+      </div>
+      <div class="nav-item" data-panel="browser">
+        <span class="ni-icon"><i class="fa fa-display"></i></span>
+        <span class="ni-label">Browser Verify</span>
+      </div>
+      <div class="nav-item" data-panel="performance">
+        <span class="ni-icon"><i class="fa fa-gauge-high"></i></span>
+        <span class="ni-label">Performance</span>
+      </div>
+      <div class="nav-item" data-panel="logs">
+        <span class="ni-icon"><i class="fa fa-terminal"></i></span>
+        <span class="ni-label">Live Logs</span>
+      </div>
+
+      <div class="nav-group-label">Output</div>
+      <div class="nav-item" data-panel="storage">
+        <span class="ni-icon"><i class="fa fa-database"></i></span>
+        <span class="ni-label">Storage</span>
+      </div>
+      <div class="nav-item" data-panel="plugins">
+        <span class="ni-icon"><i class="fa fa-puzzle-piece"></i></span>
+        <span class="ni-label">Plugins / CLI</span>
+      </div>
+      <div class="nav-item" data-panel="report">
+        <span class="ni-icon"><i class="fa fa-file-lines"></i></span>
+        <span class="ni-label">Report Export</span>
+      </div>
+    </nav>
+
+    <div class="scan-footer">
+      <div class="sf-row">
+        <div class="sf-dot idle" id="sf-dot"></div>
+        <span class="sf-label" id="sf-label">Idle</span>
+        <span class="sf-pct" id="sf-pct">0%</span>
+      </div>
+      <div class="sf-bar"><div class="sf-fill" id="sf-fill" style="width:0%"></div></div>
+      <div class="sf-sub" id="sf-sub">0 / 0 URLs · 0 findings</div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ───────────────────────────────────────────────────── -->
+  <div class="main">
+    <header class="topbar">
+      <span class="topbar-title" id="topbar-title">Configuration — §1 §2 §14 §18</span>
+      <span class="topbar-meta" id="topbar-meta">python scanner.py --workers 20 --browser chromium</span>
+      <button class="btn btn-amber" id="btn-import" onclick="UI.importClick()">
+        <i class="fa fa-upload"></i> Import URLs
+      </button>
+      <input type="file" id="file-input" accept=".txt,.csv" style="display:none" onchange="UI.handleFileUpload(event)"/>
+      <button class="btn btn-cyan" id="btn-start" onclick="UI.toggleScan()">
+        <i class="fa fa-play"></i> Start Scan
+      </button>
+      <button class="btn btn-red" id="btn-stop" style="display:none" onclick="UI.toggleScan()">
+        <i class="fa fa-stop"></i> Stop
+      </button>
+      <div class="ws-indicator" id="ws-dot" title="WebSocket connection"></div>
+    </header>
+
+    <div class="content" id="content">
+      <!-- Panels injected by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
